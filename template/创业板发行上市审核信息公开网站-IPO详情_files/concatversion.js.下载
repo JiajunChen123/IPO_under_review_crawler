@@ -1,0 +1,435 @@
+var domainReitsHttp = domainReitsHttp || 'http://reits.szse.cn';
+var domainMainHost = domainMainHttp.replace(/http:\/\//, '');
+var domainBondHost = domainBondHttp.replace(/http:\/\//, '');
+var domainEipoHost = domainEipoHttp.replace(/http:\/\//, '');
+var domainLefuHost = domainLefuHttp.replace(/http:\/\//, '');
+var domainInvestorHost = domainInvestorHttp.replace(/http:\/\//, '');
+var domainDiscStaticHost = domainDiscStaticHttp.replace(/http:\/\//, '');
+var domainResHost = domainResHttp.replace(/http:\/\//, '');
+var domainDocsStaticHost = domainDocsStaticHttp.replace(/http:\/\//, '');
+var domainChinextHost = domainChinextHttp.replace(/http:\/\//, '');
+var domainReitsHost = domainReitsHttp.replace(/http:\/\//, '');
+var domainFundHost = domainFundHttp.replace(/http:\/\//, '');
+var domainFintechHost = domainFintechHttp.replace(/http:\/\//, '');
+
+
+var pathObj = {
+  main_domain_path: domainMainHost, //主网站域名
+  main_domain_path_http: domainMainHttp, //主网站域名(http)
+  main_domain_path_https: domainMainHttps, //主网站域名(https)
+  sso_domain_path_https: domainOwsssoHttps, //登录域名(https)
+
+  bond_domain_path: domainBondHost, //固收子网站域名
+  bond_domain_path_https: domainBondHttps, //固收子网站域名(https)
+  bond_domain_path_http: domainBondHttp, //固收子网站域名(http)
+
+  lefu_domain_path: domainFundHost, //乐富子网站域名
+  lefu_domain_path_http: domainFundHttp, //乐富子网站域名(http)
+  lefu_domain_path_https: domainFundHttps, //乐富子网站域名(https)
+
+  investor_domain_path: domainInvestorHost, //投教子网站域名
+  investor_domain_path_http: domainInvestorHttp, //投教子网站域名(http)
+  investor_domain_path_https: domainInvestorHttps, //投教子网站域名(https)
+
+  eipo_domain_path: domainEipoHost, //网下发行
+  eipo_domain_path_http: domainEipoHttp, //网下发行(http)
+  eipo_domain_path_https: domainEipoHttps, //网下发行(https)
+
+  ras_domain_path: domainChinextHost, // 注册制
+  ras_domain_path_http: domainChinextHttp, // 注册制（http）
+  ras_domain_path_https: domainChinextHttps, // 注册制（https）
+
+  reits_domain_path: domainReitsHost, // 基础设施基金
+  reits_domain_path_http: domainReitsHttp, // 基础设施基金（http）
+  reits_domain_path_https: domainReitsHttps, // 基础设施基金（https）
+
+  fin_domain_path: domainFintechHost, // 金融科技中心
+  fin_domain_path_http: domainFintechHttp, // 金融科技中心（http）
+  fin_domain_path_https: domainFintechHttps, // 金融科技中心（https）
+
+  file_path: domainResStaticHttp, //静态资源域名
+  https_file_path: domainResHttps, //https时静态资源域名
+  report_file_path: domainReportdocsStaticHttp, //报表中文件(pdf等)域名   
+  disc_file_path: domainDiscStaticHttp, //信息披露文件（pdf等）域名
+  cms_file_path: domainDocsStaticHttp, //cms发布的图片或视频域名
+
+  unifieduser_path: '/api/uum', //统一用户接口
+  user_path: '/api/user', //用户中心接口地址
+  search_path: '/api/search', //搜索接口地址
+  market_path: '/api/market', //行情接口地址
+  disc_path: '/api/disc', //信息披露接口地址
+  report_path: '/api/report', //报表接口地址
+  bond_path: '/api/bond', //固收接口地址
+  bond_report_path: '/api/bondreport', //固收子网站报表接口地址（需要登录）  
+  feedback_path: '/api/feedback', //意见反馈接口地址
+  apply_path: '/api/apply' //在线招聘接口地址
+};
+
+var sjsVersion = '1.2.74'; //20210109  灾备屏蔽动态码等功能上线
+
+
+//var isDevModel = sessionStorage.getItem("isDevModel")==="true" ? true : false; //是否是开发模式
+
+var isDevModel = false;
+
+
+//换肤变量
+//var themesColorValue = 'red';//红色red
+// 获取菜单导航
+(function () {
+  window.navMenuAJAX = function (menuUrl, big5MenuUrl, navType, host, isSite) {//navType:pc mobile footer
+
+    if (location.host.indexOf(host) > -1) {
+      menuUrl = location.protocol + '//' + location.host + menuUrl;
+    } else {
+      menuUrl = location.protocol + '//' + location.host + big5MenuUrl;
+    }
+
+    if (navType == 'pcMenu') {
+      var obj = {
+        url: menuUrl,
+        success: function (data) {
+          var navMenuList = parseDom(data);
+          var navMenuPC = navMenuList[0].innerHTML;
+          document.write(navMenuPC);
+
+          // 初始化菜单选择样式
+          var navbarNavList = document.querySelectorAll('.navbar-wrap .navbar-nav>li>a');
+          var navDataPathArr = [];
+          var isPCHome = true;//是否是首页
+          for (var i = 0; i < navbarNavList.length; i++) {
+            var datapath = navbarNavList[i].attributes['datapath'].nodeValue;
+            navDataPathArr.push(datapath);
+          }
+
+          // (解决用户入口跳转投教、固收子网 域名为www问题,遗留缺陷修改后，可删除）xxmeng 20201222
+          var isNotOwnerHostFlag = false;
+          if (host == 'investor' || host == 'bond') {
+            isNotOwnerHostFlag = (window.location.href.indexOf(host + '.szse.cn') > 0) ? false : true;
+          }
+
+          if (window.location.href.indexOf('big5.szse.cn/') > -1) {
+            if ((host === 'www' && isSite) || isNotOwnerHostFlag) {
+              var _href = window.location.href.split('/')[7];
+            } else {
+              var _href = window.location.href.split('/')[6];
+            }
+          } else {
+            if ((host === 'www' && isSite) || isNotOwnerHostFlag) {
+              var _href = window.location.href.split('/')[4];
+            } else {
+              var _href = window.location.href.split('/')[3];
+            }
+          }
+          for (var i = 0; i < navDataPathArr.length; i++) {
+            if (navDataPathArr[i] && navDataPathArr[i] == _href) {
+              isPCHome = false;
+              document.querySelector('a[datapath="' + navDataPathArr[i] + '"]').parentNode.setAttribute('class', 'active');
+            }
+          }
+          if (isPCHome) {
+            navbarNavList[0].parentNode.setAttribute('class', 'active');
+          }
+        }
+      };
+    } else if (navType == 'mobileMenu') {
+      var obj = {
+        url: menuUrl,
+        success: function (data) {
+          var navMenuList = parseDom(data);
+          var navMenuMobile = navMenuList[1].innerHTML;
+          document.write(navMenuMobile);
+
+          // 初始化菜单选中样式
+          var mobileNavList = document.querySelectorAll('#dl-menu .dl-menu a');
+          var isMobileHome = true;//是否是首页
+          // 繁/简体版地址处理
+          var big5MobileUrl = '/' + (parseBig5Url(window.location.href, host));
+          var _locationMobileHref = '/' + (parseUrl(window.location.href, host).split('/').splice(3).join('/'));
+          for (var i = 0; i < mobileNavList.length - 4; i++) {
+            mobileNavList[i]._href = parseUrl(mobileNavList[i].getAttribute('href'));
+            if (_locationMobileHref == mobileNavList[i]._href || big5MobileUrl == mobileNavList[i]._href) {
+              isMobileHome = false;
+              var activeLiList = getParent(mobileNavList[i], 'LI', 10);
+              activeLiList.map(function (item, index) {
+                item.setAttribute('class', 'dl-subview');
+              });
+              activeLiList[0].setAttribute('class', 'active');
+              if (activeLiList[1]) {
+                activeLiList[1].setAttribute('class', 'dl-subviewopen');
+                document.getElementsByClassName('dl-menu')[0].setAttribute('class', 'dl-menu dl-subview');
+              };
+            }
+          }
+
+          if (isMobileHome) {
+            mobileNavList[0].parentNode.setAttribute('class', 'active');
+          }
+
+        }
+      };
+    } else if (navType == 'footerMenu') {
+      var obj = {
+        url: menuUrl,
+        success: function (data) {
+          if (host == 'bond') {
+            var footerMenuList = parseDom(data);
+            var footerMenu = window.location.protocol == 'http:' ? footerMenuList[0].innerHTML : footerMenuList[1].innerHTML;
+            document.write(footerMenu);
+          } else {
+            document.write(data);
+          }
+        }
+      }
+    }
+
+
+    var xhr = new XMLHttpRequest();
+
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState === 4) {
+        if (xhr.status === 200) {
+          var response;
+          var type = xhr.getResponseHeader('Content-Type');
+
+          if (type.indexOf('application/json') > -1) {
+            response = JSON.parse(xhr.responseText);
+          } else {
+            response = xhr.responseText;
+          }
+          obj.success && obj.success(response);
+        }
+      }
+    }
+    xhr.open('GET', obj.url, false);
+    xhr.send();
+  };
+
+  function parseBig5Url(url, param) {
+    // 繁体版
+    if (url.indexOf('big5.szse.cn/') > -1) {
+      url = url.replace('/site/cht/' + param + '.szse.cn/', '/');
+      var _index = url.lastIndexOf('/');
+      if (_index + 1 == url.length && url.indexOf('index.html') == -1)
+        url += 'index.html';
+      if (param == 'bond' && window.location.protocol == 'https:') {
+        if (url.indexOf('/index.html?') > -1) {
+          var i = url.indexOf('/index.html?');
+          url = url.substring(0, i + 11);
+        }
+      }
+      if (param == 'eipo') {
+        var arr = url.split('/');
+        arr.splice(3, 0, 'eipo');
+        url = arr.join('/');
+      }
+      return url.split('/').splice(3).join('/');
+    }
+  }
+
+  function parseUrl(url, param) {
+    var _index = url.lastIndexOf('/');
+    if (_index + 1 == url.length && url.indexOf('index.html') == -1)
+      url += 'index.html';
+
+    if (param == 'eipo') {
+      var arr = url.split('/');
+      arr.splice(3, 0, 'eipo');
+      url = arr.join('/');
+    }
+    if (param == 'bond' && window.location.protocol == 'https:') {
+      if (url.indexOf('/index.html?') > -1) {
+        var i = url.indexOf('/index.html?');
+        url = url.substring(0, i + 11);
+      }
+    }
+    return url;
+  }
+
+
+  function parseDom(str) {
+    var objEle = document.createElement('div');
+    objEle.innerHTML = str;
+    return objEle.childNodes;
+  }
+
+
+  function getParent(ele, TagName, n) {
+    var flag = true;
+    var tagNameList = [];
+    while (ele && n && flag) {
+      ele = ele.parentNode;
+      if (ele.tagName === 'BODY') {
+        ele = null;
+      } else if (ele.tagName === TagName) {
+        tagNameList.push(ele);
+      }
+      n--;
+    }
+    return tagNameList;
+  }
+})();
+
+var ie8suppose = false;  //TODO
+isIE8();
+// isIE8Tip();
+
+//加载公共的css文件
+window.addComCssFile = function() {
+    
+    if (!isDevModel) {
+        changeVertion('/lib/szsewebui/szsewebui_v1.2.4-beta7/libs/libs.min.css', 'css');
+        changeVertion('/lib/szsewebui/szsewebui_v1.2.4-beta7/framework/szsewebui.min.css', 'css');
+        changeVertion('/common/css/dlmenu.min.css', 'css');
+        changeVertion('/common/css/concatCss.min.css', 'css');
+    } else {
+        changeVertion('/lib/szsewebui/szsewebui_v1.2.4-beta7/libs/libs.min.css', 'css');
+        changeVertion('/lib/szsewebui/szsewebui_v1.2.4-beta7/framework/szsewebui.min.css', 'css');
+        changeVertion('/common/css/dlmenu.css', 'css');
+        changeVertion('/common/css/reset.css', 'css');
+        changeVertion('/common/css/grid.css', 'css');
+        changeVertion('/common/css/week.css', 'css');
+        changeVertion('/common/css/resetcontrols.css', 'css');
+        changeVertion('/common/css/common.css', 'css');
+    }   
+   
+};
+//加载公共的js文件
+window.addComJsFile = function() {
+    if (!isDevModel) {
+        changeVertion('/lib/jQuery_1.11.3/jquery.min.js', 'js');
+        changeVertion('/lib/szsewebui/szsewebui_v1.2.4-beta7/framework/szsewebui.min.js', 'js');
+        changeVertion('/lib/lodash/lodash.min.js', 'js');
+        changeVertion('/lib/modernizr.custom.min.js', 'js');
+        changeVertion('/lib/jquery.dlmenu.min.js', 'js');
+        changeVertion('/lib/qrcode/jquery.qrcode.min.js', 'js');      
+        changeVertion('/common/js/concatJs.min.js','js');
+        changeVertion('/common/js/feedback.js', 'js');      
+    } else {
+        changeVertion('/lib/jQuery_1.11.3/jquery.min.js', 'js');
+        changeVertion('/lib/szsewebui/szsewebui_v1.2.4-beta7/framework/szsewebui.js', 'js');
+        changeVertion('/lib/lodash/lodash.min.js', 'js');  
+        changeVertion('/lib/modernizr.custom.min.js', 'js');
+        changeVertion('/lib/jquery.dlmenu.min.js', 'js');
+        changeVertion('/lib/qrcode/jquery.qrcode.min.js', 'js'); 
+        changeVertion('/common/js/utils.js', 'js');
+        changeVertion('/common/js/weekpicker.js', 'js');
+        changeVertion('/common/js/placeholder.js', 'js');
+        changeVertion('/common/js/searchHint.js', 'js');
+        changeVertion('/common/js/http.js', 'js');
+        changeVertion('/common/js/common.js', 'js');
+        changeVertion('/common/js/modal.js', 'js');    
+        changeVertion('/common/js/paginator.js', 'js'); 
+        changeVertion('/common/js/feedback.js', 'js');    
+        changeVertion('/common/js/waterFall.js', 'js');
+        changeVertion('/common/js/editSubsiteLink.js', 'js');
+    }
+};
+
+//更改版本
+var themesColorValue = themesColorValue || '';
+function changeVertion(url, type) {
+
+    //ie8
+    // alert(ie8suppose);
+    // var ie8suppose = true;
+  //isIE8();
+    //ie8 end
+    // var ie8suppose = true;
+    var filePath = '';
+    if (isNotHttps()) {
+        filePath = pathObj.https_file_path;
+    } else {
+        filePath = pathObj.file_path;
+    }
+
+    if(!isDevModel){
+        var minFlag = (url.indexOf('.min.'+type)>-1);//url中是否带有'min';
+        //var libFlag = url.indexOf('/lib')>-1;//url中是否带有lib;
+        if(!minFlag)url=url.replace('.'+type,'.min.'+type);//当isDevModel=false时即非开发环境，此时则引用压缩文件（即带min）
+    }
+
+    switch (type) {
+        case 'css':
+            //url = 'themes/' + themesColorValue + url;
+            if(themesColorValue.length!== 0 && url.indexOf("/lib/")==-1 && url.indexOf("ie8fix")==-1 ){
+            	var urlname = url.indexOf(".");
+            	url = url.substring(0,urlname) + "_" + themesColorValue + url.substring(urlname);
+            }
+            //var linkhref = " <link rel='stylesheet' href='" + filePath + url + "?version=" + sjsVersion + "' /> ";
+            // if(url.indexOf("SuniT")> 0)
+            // var linkhref = " <link rel='stylesheet' href='" + url + "?version=" + sjsVersion + "' /> ";
+            // else
+            var linkhref = " <link rel='stylesheet' href='" + filePath + url + "?version=" + sjsVersion + "' /> ";
+            // 
+            if(ie8suppose){
+                linkhref = " <link rel='stylesheet' href='" + url + "?version=" + sjsVersion + "' /> ";
+            }
+            document.write(linkhref);
+            break;
+        case 'js':
+            //var jshref=" <script src='" + filePath + url + "?version=" + sjsVersion + "'> <\/script> ";
+            // if(url.indexOf("SuniT")> 0)
+            // var jshref =" <script src='" + url + "?version=" + sjsVersion + "'> <\/script> ";
+            // else
+            var jshref =" <script src='" + filePath + url + "?version=" + sjsVersion + "'> <\/script> ";
+
+            document.write(jshref);
+            break;
+    }
+}
+
+//判断当前地址是http还是https
+function isNotHttps() {
+    var href = window.location.href;
+    var index = href.indexOf("//");
+    var str = href.substring(0, index - 1);
+    if (str == 'https') {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+function isIE8(){
+   
+    var DEFAULT_VERSION = 8.0;  
+    var ua = navigator.userAgent.toLowerCase();  
+    var isIE = ua.indexOf("msie")>-1;  
+    var safariVersion;  
+    if(isIE){  
+    safariVersion =  ua.match(/msie ([\d.]+)/)[1];  
+    }  
+    if(safariVersion <= DEFAULT_VERSION ){  
+        ie8suppose = true;
+       //alert('系统检测到您正在使用ie8以下内核的浏览器');
+        var ieTipStr = '<div class="low_version">系统检测到您正在使用ie8以下内核的浏览器，不能实现完美体验，请及时更新浏览器版本！</div>'; 
+        // document.write = urite;
+        // document.write(ieTipStr);
+        // var oDiv = document.createElement("div");
+        // // oDiv.class="low_version";
+        // var oDivText = document.createTextNode("ie8以下内核!!!!");
+        // oDiv.appendChild(oDivText);
+        // // document.body.insertBefore(oDiv,document.body.firstElementChild);
+        // document.body.appendChild(oDiv);
+        // document.getElementByTagName("div")[0].className="low_version";
+    };
+    //return ie8suppose;
+}
+
+
+// function isIE8Tip(){
+   
+//     var DEFAULT_VERSION = 8.0;  
+//     var ua = navigator.userAgent.toLowerCase();  
+//     var isIE = ua.indexOf("msie")>-1;  
+//     var safariVersion;  
+//     if(isIE){  
+//     safariVersion =  ua.match(/msie ([\d.]+)/)[1];  
+//     }  
+//     if(safariVersion <= DEFAULT_VERSION ){  
+//         // alert('系统检测到您正在使用ie8以下内核的浏览器');
+
+//     };
+//     //return ie8suppose;
+// }
