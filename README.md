@@ -28,15 +28,15 @@ python ./src/main.py
 
 
 
-文件数据保存在/data/文件夹中 
-/data/EastMoney/ 保存东方财富网源数据 
-/data/证监会文件/ 保存项目反馈意见 
-/data/IPO/ 为各项目单独的数据和文件（pdf文件暂未下载） 
+文件数据保存在/data/文件夹中  
+- /data/EastMoney/ 保存东方财富网源数据   
+- /data/证监会文件/ 保存项目反馈意见    
+- /data/IPO/ 为各项目单独的数据和文件（pdf文件暂未下载）   
 
-项目详细数据以python字典的形式保存在/saved_config/文件夹的.pkl文件中。 
-szcyb_stocksInfo.pkl 为创业板所有在审项目详细信息 
-shkcb_stocksInfo.pkl 为科创板所有在审项目详细信息 
-zb_zxb_stocksInfo.pkl 为主板中小板所有项目详细信息（待核对） 
+项目详细数据以python字典的形式保存在/saved_config/文件夹的.pkl文件中  
+- szcyb_stocksInfo.pkl 为创业板所有在审项目详细信息    
+- shkcb_stocksInfo.pkl 为科创板所有在审项目详细信息  
+- zb_zxb_stocksInfo.pkl 为主板中小板所有项目详细信息（待核对） 
 
 
 **待完成：**
